@@ -6,12 +6,22 @@ module Wisper
   class ActiveJobBroadcaster
     attr_reader :options
 
+    class << self
+      def broadcast_with(job_class)
+        @job_class = job_class
+      end
+
+      def job_class
+        @job_class || Wrapper
+      end
+    end
+
     def initialize(options = {})
       @options = options == true ? {} : options
     end
 
     def broadcast(subscriber, publisher, event, args)
-      Wrapper.set(options).perform_later(subscriber.name, event, args)
+      self.class.job_class.set(options).perform_later(subscriber.name, event, args)
     end
 
     class Wrapper < ::ActiveJob::Base
